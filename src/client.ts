@@ -1,4 +1,4 @@
-import { initializeClient, registerService } from "./lib.js";
+import { config, configType, initializeClient, registerConfigItem, registerService } from "./lib.js";
 
 async function main() {
 
@@ -6,12 +6,15 @@ async function main() {
 
     // Init onze services 
     function serviceEcho(args: any[]): any {
-        console.log('Echo service aangeroepen met args:', args);
+        if (config['echo']) {
+            console.log('Echo service aangeroepen met args:', args);
+        }
         return args[0] || "ontvangen";
     }
 
-    registerService('test.echo', serviceEcho, ['message']);
+    await registerService('test.echo', serviceEcho, ['message']);
 
+    await registerConfigItem('echo', 'gebruik echo', configType.bool, true);
 }
 
 main();

@@ -8,12 +8,24 @@ type ServiceDef = {
     client: ServiceClient;
     FUNC?: (args: any[]) => any | Promise<any>;
 };
+enum configType {
+    str,
+    bool,
+    int
+};
+type configOption = {
+    id: string;
+    human_name: string;
+    configType: configType
+    owner: ServiceClient;
+    value: any;
+};
 
 const clients = new Set<WebSocket>();
 
 function getServices(args: any[]): string[] {
     return Object.keys(servicesAvailable);
-}
+};
 
 let servicesAvailable: Record<string, ServiceDef> = {
     'connector.status': {
@@ -34,6 +46,8 @@ let servicesAvailable: Record<string, ServiceDef> = {
         FUNC: (args: any[]) => args[0] || "ontvangen",
     }
 };
+
+let configOptions: Record<string, configOption> = {};
 
 let awaitingResponses: Record<number, WebSocket> = {};
 
@@ -128,7 +142,7 @@ wss.on('connection', (ws, req) => {
             const originalRequester = awaitingResponses[callbackId];
             if (originalRequester) {
                 originalRequester.send(JSON.stringify({
-                    status: '200',
+                    status: '210',
                     human_readable: 'Response van service client',
                     data: responseData,
                 }));
@@ -140,7 +154,50 @@ wss.on('connection', (ws, req) => {
                 }));
             }
 
-        };
+        }
+        else if (data?.action === "getConfigOptions") {
+            ws.send(JSON.stringify({ status: "200", human_readable: "config data", data: configOptions }))
+        } else if (data?.action === "makeConfigOption") {
+            configOptions[data?.id] = {
+                id: data?.id,
+                human_name: data?.human,
+                owner: ws,
+                configType: data?.configType,
+                value: data?.value
+            }
+            ws.send(JSON.stringify({ status: '200', human_readable: "gemaakt!" }))
+        } else if (data?.action === "setConfig") {
+            if (data?.id && data?.value) {
+                let c = configOptions[data.id];
+                if (!(c)) {
+                    ws.send(JSON.stringify({
+                        status: '404',
+                        human_readable: 'config item niet gevonden',
+                    }));
+                } else {
+                    c.value = data.value;
+                    configOptions[data.id] = c;
+                    if (!(c.owner === "BUILTIN")) {
+                        c.owner.send(JSON.stringify({
+                            status: "600",
+                            id: data.id,
+                            value: data.value
+                        }))
+                    }
+                    ws.send(
+                        JSON.stringify(
+                            { status: "200", human_readable: "Config geupdate" }
+                        )
+                    )
+                }
+
+            } else {
+                ws.send(JSON.stringify({
+                    status: "400",
+                    human_readable: "je verzoek was niet goed"
+                }))
+            }
+        }
     });
 
     ws.on('close', () => {
@@ -151,6 +208,13 @@ wss.on('connection', (ws, req) => {
                 console.log(`Service ${name} verwijderd vanwege client disconnect.`);
             }
         }
+        for (const [name, service] of Object.entries(configOptions)) {
+            if (service.owner === ws) {
+                delete servicesAvailable[name];
+                console.log(`config ${name} verwijderd vanwege client disconnect.`);
+            }
+        }
+
         clients.delete(ws);
         console.log('Client weg');
 

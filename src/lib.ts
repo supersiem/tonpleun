@@ -9,8 +9,18 @@ export type Message = {
     serviceId?: string;
     args?: any[];
     data?: any;
+    id?: string;
+    value?: any;
+
 };
 
+export enum configType {
+    str,
+    bool,
+    int
+}
+
+export let config: Record<string, any> = {};
 // voor wie complete controle wil over ws client gedrag
 export let ws: WebSocket;
 
@@ -18,6 +28,7 @@ export let successHandler: ((data: any) => void) | null = null;
 export let errorHandler: ((error: any) => void) | null = null;
 export let debugLogging: boolean = false;
 let serviceHandlers: Record<string, (args: any[]) => any> = {};
+let waitingForData: boolean = false;
 
 function debugLog(...message: any[]) {
     if (debugLogging) {
@@ -27,9 +38,12 @@ function debugLog(...message: any[]) {
 
 function parseData(msg: Message): any | null {
     if (ws) {
-        if (msg.status === '200') {
+        if (msg.status === "200") {
             debugLog('Ontvangen data:', msg.data);
-            if (successHandler) successHandler(msg.data);
+            if (successHandler && !waitingForData) successHandler(msg.data);
+        }
+        else if (msg.status === "210") {
+            if (waitingForData && successHandler) successHandler(msg.data)
         }
         else if (msg.status === '700') {
             debugLog('Service oproep ontvangen:', msg.callbackId);
@@ -40,6 +54,15 @@ function parseData(msg: Message): any | null {
                 data: msg.args,
             }));
         }
+        else if (msg.status === "600") {
+            debugLog('config update ontvangen')
+            if (msg?.id) {
+                config[msg?.id] = msg?.value;
+            }
+        } else {
+            if (errorHandler) errorHandler(msg.data)
+            // console.log('error code', msg.status)
+        }
     } else {
         console.error('WebSocket is niet geïnitialiseerd.');
     }
@@ -48,6 +71,7 @@ function parseData(msg: Message): any | null {
 export function registerService(serviceId: string, handler: (args: any[]) => any, args?: string[]) {
     if (ws) {
         serviceHandlers[serviceId] = handler;
+
         ws.send(JSON.stringify({
             action: 'register',
             service: serviceId,
@@ -57,11 +81,27 @@ export function registerService(serviceId: string, handler: (args: any[]) => any
         console.error('WebSocket is niet geïnitialiseerd.');
     }
 }
+export async function registerServiceAsync(serviceId: string, handler: (args: any[]) => any, args?: string[]): Promise<any> {
+    if (ws) {
+        return new Promise((resolve, reject) => {
+            successHandler = resolve;
+            errorHandler = reject;
+            ws.send(JSON.stringify({
+                action: 'get',
+                service: serviceId,
+                args: args,
+            }));
+        });
+    } else {
+        return Promise.reject('WebSocket is niet geïnitialiseerd.');
+    }
+}
 // met callback
 export function callService(serviceId: string, args: any[], onSuccess: (data: any) => void, onError: (error: any) => void) {
     if (ws) {
         successHandler = onSuccess;
         errorHandler = onError;
+        waitingForData = true;
         ws.send(JSON.stringify({
             action: 'get',
             service: serviceId,
@@ -77,6 +117,7 @@ export async function callServiceAsync(serviceId: string, args: any[]): Promise<
         return new Promise((resolve, reject) => {
             successHandler = resolve;
             errorHandler = reject;
+            waitingForData = true;
             ws.send(JSON.stringify({
                 action: 'get',
                 service: serviceId,
@@ -87,6 +128,42 @@ export async function callServiceAsync(serviceId: string, args: any[]): Promise<
         return Promise.reject('WebSocket is niet geïnitialiseerd.');
     }
 }
+
+export async function registerConfigItem(id: string, human_name: string, configType: configType, value: any): Promise<any> {
+    if (ws) {
+        config[id] = value;
+        return new Promise((resolve, reject) => {
+            successHandler = resolve;
+            errorHandler = reject;
+            ws.send(JSON.stringify({
+                action: "makeConfigOption",
+                human: human_name,
+                id: id,
+                configType: configType,
+                value: value
+            }));
+        });
+    } else {
+        return Promise.reject('WebSocket is niet geïnitialiseerd.d')
+    }
+}
+export async function setConfigItem(id: string, value: any) {
+    if (ws) {
+        return new Promise((resolve, reject) => {
+            successHandler = resolve;
+            errorHandler = reject;
+            ws.send(JSON.stringify({
+                action: "makeConfigOption",
+                id: id,
+                value: value
+            }));
+        });
+
+    } else {
+        return Promise.reject('WebSocket is niet geïnitialiseerd.')
+    }
+}
+
 export async function initializeClient() {
     ws = new WebSocket(url);
 

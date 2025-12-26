@@ -1,4 +1,4 @@
-import { initializeClient, callService, callServiceAsync } from "./lib.js";
+import { initializeClient, callServiceAsync, setConfigItem } from "./lib.js";
 
 async function main() {
     await initializeClient();
@@ -6,26 +6,9 @@ async function main() {
     const test = await callServiceAsync('test.echo', ['Hallo van de client!'])
     console.log('Antwoord van echo service (promise):', test);
 
-    const test2 = await callServiceAsync('connector.services', [])
-    console.log('Antwoord van connector.services (promise):', test2);
+    await setConfigItem('echo', false)
 
-    callService('test.echo', ['Hallo met callback!'],
-        (data) => {
-            console.log('Antwoord van echo service (callback):', data);
-        },
-        (error) => {
-            console.error('Fout bij aanroepen van echo service:', error);
-        }
-    );
-
-    callService('connector.services', [],
-        (data) => {
-            console.log('Antwoord van connector.services (callback):', data);
-        },
-        (error) => {
-            console.error('Fout bij aanroepen van connector.services:', error);
-        }
-    );
-
+    const test2 = await callServiceAsync('test.echo', ['Hallo van de client!'])
+    console.log('Antwoord van echo service (promise):', test2);
 }
 main();
