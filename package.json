@@ -5,11 +5,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && node ./dist/main.js",
-    "test": "tsc && node ./dist/client.js",
-    "testtest": "tsc && node ./dist/test2.js",
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "start": "tsc && clear && node ./dist/server.js",
+    "test": "tsc && clear && node ./dist/client.js",
+    "testDeTest": "tsc && clear && node ./dist/client2.js",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
