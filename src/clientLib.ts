@@ -1,11 +1,13 @@
 import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
-import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket } from './types.js';
+import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket, type registerConfigPacket, type setConfigPacket, type fakeTypeType } from './types.js';
 import { WsSend } from './helpers.js';
 
 const url = "ws://localhost:8765";
 export let ws: WebSocket;
 const serviceCallbacks = new Map<string, (...args: any[]) => any>();
+let clinetIDStore = "error";
+const localConfigs = new Map<string, registerConfigPacket>();
 
 export async function awaitServiceMessage(expectedFor: stringPacketOptions): Promise<StringPacket> {
     return new Promise<StringPacket>((resolve) => {
@@ -22,8 +24,31 @@ export async function awaitServiceMessage(expectedFor: stringPacketOptions): Pro
         ws.on('message', handler);
     });
 }
+export async function registerConfigItem(name: string, description: string, value: string, idthing: string) {
 
-export async function registerService(ServiceId: string, args: ('boolean' | 'string' | 'number')[], callback: (...args: any[]) => any) {
+    WsSend(ws, { type: requestType.RegisterConifg, data: { name: name, description: description, defaultValue: value, type: typeof value, id: idthing } as registerConfigPacket })
+    // Wacht tot de verbinding is geopend
+    return new Promise<void>((resolve) => {
+        awaitServiceMessage(stringPacketOptions.registerConfigSuccess).then(() => {
+            localConfigs.set(idthing, { name, id: idthing, description, type: typeof value as fakeTypeType, defaultValue: value } as registerConfigPacket)
+            resolve();
+        });
+    });
+}
+export async function SetConfigItem(idthing: string, newValue: string, clientId?: string) {
+    WsSend(ws, { type: requestType.SetConfig, data: { ClientId: clientId || clinetIDStore, id: idthing, newValue: newValue } as setConfigPacket })
+    return new Promise<void>((resolve) => {
+        awaitServiceMessage(stringPacketOptions.setConfigSuccess).then(() => {
+            const existing = localConfigs.get(idthing);
+            if (existing) {
+                localConfigs.set(idthing, { ...existing, value: newValue } as registerConfigPacket);
+            }
+            resolve();
+        });
+    });
+}
+
+export async function registerService(ServiceId: string, args: fakeTypeType[], callback: (...args: any[]) => any) {
     WsSend(ws, { type: requestType.RegisterService, data: { ServiceId, args } });
     serviceCallbacks.set(ServiceId, callback);
     return new Promise<void>((resolve) => {
@@ -51,6 +76,7 @@ export async function getService(ServiceId: string, ClientId: string, inputs: an
 }
 
 export async function initializeClient(ClientId: string) {
+    clinetIDStore = ClientId;
     ws = new WebSocket(url);
 
     ws.on('open', () => {
@@ -85,6 +111,12 @@ export async function initializeClient(ClientId: string) {
                 }
             }
 
+        } else if (rawPacket.type === requestType.SetConfig) {
+            const cfg = rawPacket.data as setConfigPacket;
+            const existing = localConfigs.get(cfg.id);
+            if (existing) {
+                localConfigs.set(cfg.id, { ...existing, value: cfg.newValue } as registerConfigPacket);
+            }
         }
     });
 
@@ -94,4 +126,9 @@ export async function initializeClient(ClientId: string) {
             resolve();
         });
     });
+}
+
+export function getConfigValue(id: string): any | undefined {
+    const item = localConfigs.get(id);
+    return item ? (item.value ?? item.defaultValue) : undefined;
 }

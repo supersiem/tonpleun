@@ -5,9 +5,11 @@ export enum requestType {
     RegisterService,
     GetServiceResponse,
     GetService,
+    RegisterConifg,
+    SetConfig
 }
-export enum stringPacketOptions { Error, initSuccess, registerServiceSuccess, getServiceSuccess };
-type fakeTypeType = 'boolean' | 'string' | 'number'
+export enum stringPacketOptions { Error, initSuccess, registerServiceSuccess, getServiceSuccess, registerConfigSuccess, setConfigSuccess };
+export type fakeTypeType = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
 export type packet = {
     type: requestType,
     data: any,
@@ -53,4 +55,19 @@ export type GetServiceResponsePacketToClient = {
     result: any,
     serviceId: string,
     connectionId: string,
+}
+// client -> server
+export type registerConfigPacket = {
+    name: string,
+    id: string,
+    description: string,
+    type: fakeTypeType,
+    defaultValue: any,
+    value?: any
+}
+// server -> client
+export type setConfigPacket = {
+    ClientId: string,
+    newValue: any,
+    id: string
 }
