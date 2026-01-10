@@ -1,4 +1,4 @@
-import { getService, initializeClient } from "./helper.js";
+import { getService, initializeClient } from "./clientLib.js";
 async function main() {
     await initializeClient('webUI');
     getData();
