@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto';
 import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket, type registerConfigPacket, type setConfigPacket, type fakeTypeType, InitResponsePacket } from './types.js';
 import { WsSend } from './helpers.js';
 import { assert } from 'console';
+import { writeFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 
 const url = "ws://localhost:8765";
 export let ws: WebSocket;
@@ -13,7 +15,17 @@ const localConfigs = new Map<string, registerConfigPacket>();
 const VERSION = {
     MAJOR: 1,
     MINOR: 1,
-    PATCH: 0
+    PATCH: 1
+}
+export async function genHelper() {
+    console.info('genHelper called');
+    const result = await getService('genHelper', 'tonpleun', []);
+
+    const outPath = dirname('./src/GEN.ts');
+    mkdirSync(outPath, { recursive: true });
+    writeFileSync('./src/GEN.ts', result);
+    console.info('GEN.ts gegenereerd in ./src/GEN.ts');
+    return result;
 }
 
 export async function awaitServiceMessage(expectedFor: stringPacketOptions): Promise<StringPacket> {

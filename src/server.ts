@@ -9,7 +9,7 @@ function mapToObject(map: Map<any, any>) {
 const VERSION = {
   MAJOR: 1,
   MINOR: 1,
-  PATCH: 0
+  PATCH: 1
 }
 
 let clients: Record<string, WebSocket> = {};
@@ -18,6 +18,23 @@ let configs = new Map<string, Map<string, registerConfigPacket>>();
 let localServices = new Map<string, (...args: any[]) => any>();
 localServices.set('getServices', (...args: any[]) => { return mapToObject(services) })
 localServices.set('getConfigs', (...args: any[]) => { return mapToObject(configs) })
+localServices.set('genHelper', (...args: any[]) => {
+  let output = '/* Dit bestand is automatisch gegenereerd door Tonpleun. Wijzigingen hierin worden overschreven. */\n\n';
+  output += `import { getService } from './clientLib.js';\n\n`;
+
+  services.forEach((serviceMap, clientId) => {
+    output += `// Services for client: ${clientId}\n`;
+    serviceMap.forEach((argTypes, serviceId) => {
+      output += `// ${serviceId}\n`;
+      output += `export async function ${serviceId}(`;
+      output += argTypes.map((type, index) => `arg${index}: ${type}`).join(', ');
+      output += `): Promise<any> {\n`;
+      output += `    return await getService('${serviceId}', '${clientId}', [${argTypes.map((_, index) => `arg${index}`).join(', ')}]);\n`;
+      output += `}\n\n`;
+    });
+  });
+  return output;
+});
 // Map a unique connectionId to the original requester WebSocket
 const connectionMap = new Map<string, WebSocket>();
 const wsServer = new WebSocketServer({ host: '0.0.0.0', port: 8765 });
