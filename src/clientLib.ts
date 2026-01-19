@@ -1,6 +1,6 @@
 import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
-import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket, type registerConfigPacket, type setConfigPacket, type fakeTypeType, InitResponsePacket } from './types.js';
+import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket, type registerConfigPacket, type setConfigPacket, type fakeTypeType, type namedFakeType, InitResponsePacket } from './types.js';
 import { WsSend } from './helpers.js';
 import { assert } from 'console';
 import { writeFileSync, mkdirSync } from 'fs';
@@ -67,7 +67,7 @@ export async function SetConfigItem(idthing: string, newValue: string, clientId?
     });
 }
 
-export async function registerService(ServiceId: string, args: fakeTypeType[], callback: (...args: any[]) => any) {
+export async function registerService(ServiceId: string, args: namedFakeType[], callback: (...args: any[]) => any) {
     WsSend(ws, { type: requestType.RegisterService, data: { ServiceId, args } });
     serviceCallbacks.set(ServiceId, callback);
     return new Promise<void>((resolve) => {
@@ -152,6 +152,8 @@ export async function initializeClient(ClientId: string) {
                     console.warn(`Waarschuwing: Patch versie mismatch: Client versie is ${VERSION.PATCH}, server versie is ${data.versionPatch}. Mogelijk zijn er bugs of ontbrekende functies.`);
                 }
                 ws.removeListener('message', handler);
+                console.info('Client geïnitialiseerd met versie:', data.versionMajor, data.versionMinor, data.versionPatch);
+                console.info('gebruik via GEN.ts is aanbevolen')
                 resolve({ for: stringPacketOptions.initSuccess, msg: 'Init succesvol' } as StringPacket);
             }
         };

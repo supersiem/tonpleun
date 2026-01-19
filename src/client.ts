@@ -6,7 +6,7 @@ function echo(args: any[]) {
 }
 async function main() {
   await initializeClient('testClient');
-  console.log(await registerService('echo', ['string'], echo))
+  console.log(await registerService('echo', [{ name: 'tekst', type: 'string' }], echo))
   console.log(await getService('getServices', 'tonpleun', []))
   // Config tests: register and update a config item, then verify via tonpleun service
   await registerConfigItem('greeting', 'Simple greeting config', 'hello', 'conf:greeting');

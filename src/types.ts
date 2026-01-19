@@ -10,6 +10,10 @@ export enum requestType {
 }
 export enum stringPacketOptions { Error, initSuccess, registerServiceSuccess, getServiceSuccess, registerConfigSuccess, setConfigSuccess };
 export type fakeTypeType = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
+export type namedFakeType = {
+    name: string,
+    type: fakeTypeType
+};
 export type packet = {
     type: requestType,
     data: any,
@@ -32,7 +36,7 @@ export type StringPacket = {
 // requestType.RegisterService
 export type RegisterServicePacket = {
     ServiceId: string,
-    args: fakeTypeType[]
+    args: namedFakeType[]
 }
 // requestType.GetService ( client1 -> server)
 export type getServicePacket = {
@@ -41,7 +45,6 @@ export type getServicePacket = {
     connectionId: string,
     args: any[],
 }
-export type args = fakeTypeType[];
 // requestType.getService (server -> client2)
 export type getServicePacketClient = {
     ServiceId: string,

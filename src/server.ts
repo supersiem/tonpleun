@@ -1,6 +1,6 @@
 import { log, successPacketBuilder, WsSend } from './helpers.js';
 import { WebSocketServer, WebSocket } from 'ws';
-import { InitResponsePacket, requestType, stringPacketOptions, type args, type getServicePacket, type getServicePacketClient, type GetServiceResponsePacketToClient, type InitPacket, type packet, type registerConfigPacket, type RegisterServicePacket, type setConfigPacket } from './types.js';
+import { InitResponsePacket, requestType, stringPacketOptions, type namedFakeType, type getServicePacket, type getServicePacketClient, type GetServiceResponsePacketToClient, type InitPacket, type packet, type registerConfigPacket, type RegisterServicePacket, type setConfigPacket } from './types.js';
 
 function mapToObject(map: Map<any, any>) {
   return Object.fromEntries([...map.entries()].map(([kMaxLength, v]): any => [kMaxLength, v instanceof Map ? mapToObject(v) : v]))
@@ -13,7 +13,7 @@ const VERSION = {
 }
 
 let clients: Record<string, WebSocket> = {};
-let services = new Map<string, Map<string, args>>();
+let services = new Map<string, Map<string, namedFakeType[]>>();
 let configs = new Map<string, Map<string, registerConfigPacket>>();
 let localServices = new Map<string, (...args: any[]) => any>();
 localServices.set('getServices', (...args: any[]) => { return mapToObject(services) })
@@ -27,12 +27,15 @@ localServices.set('genHelper', (...args: any[]) => {
     serviceMap.forEach((argTypes, serviceId) => {
       output += `// ${serviceId}\n`;
       output += `export async function ${serviceId}(`;
-      output += argTypes.map((type, index) => `arg${index}: ${type}`).join(', ');
+      output += argTypes.map((type, _) => `${type.name}: ${type.type}`).join(', ');
       output += `): Promise<any> {\n`;
-      output += `    return await getService('${serviceId}', '${clientId}', [${argTypes.map((_, index) => `arg${index}`).join(', ')}]);\n`;
+      output += `    return await getService('${serviceId}', '${clientId}', [${argTypes.map((arg, _) => `${arg.name}`).join(', ')}]);\n`;
       output += `}\n\n`;
     });
   });
+
+  output += `// Tonpleun versie: ${VERSION.MAJOR}.${VERSION.MINOR}.${VERSION.PATCH}\n`;
+  output += `// Genereer dit bestand opnieuw met de genHelper service indien services zijn gewijzigd.\n`;
   return output;
 });
 // Map a unique connectionId to the original requester WebSocket
