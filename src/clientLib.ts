@@ -15,7 +15,7 @@ const localConfigs = new Map<string, registerConfigPacket>();
 const VERSION = {
     MAJOR: 1,
     MINOR: 1,
-    PATCH: 1
+    PATCH: 2
 }
 export async function genHelper() {
     console.info('genHelper called');

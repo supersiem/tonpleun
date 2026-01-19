@@ -9,7 +9,7 @@ function mapToObject(map: Map<any, any>) {
 const VERSION = {
   MAJOR: 1,
   MINOR: 1,
-  PATCH: 1
+  PATCH: 2
 }
 
 let clients: Record<string, WebSocket> = {};
