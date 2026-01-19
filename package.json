@@ -1,6 +1,6 @@
 {
   "name": "@siemsiem/tonpleun",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "description": "uhhh dit zijn zeer goede docs (nee) tonpleun is een websocket server die websocket clients verzoeken laat maken aan andere websocket clients die zich als service registreren. voor nu is tonpleun in js maar wrs moet ik het porten naar python omdat ik dan meer code kan hergebruiken voor andere projecten.",
   "keywords": [],
   "homepage": "https://github.com/supersiem/Tonpleun#readme",
