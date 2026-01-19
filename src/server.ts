@@ -1,9 +1,15 @@
 import { log, successPacketBuilder, WsSend } from './helpers.js';
 import { WebSocketServer, WebSocket } from 'ws';
-import { requestType, stringPacketOptions, type args, type getServicePacket, type getServicePacketClient, type GetServiceResponsePacketToClient, type InitPacket, type packet, type registerConfigPacket, type RegisterServicePacket, type setConfigPacket } from './types.js';
+import { InitResponsePacket, requestType, stringPacketOptions, type args, type getServicePacket, type getServicePacketClient, type GetServiceResponsePacketToClient, type InitPacket, type packet, type registerConfigPacket, type RegisterServicePacket, type setConfigPacket } from './types.js';
 
 function mapToObject(map: Map<any, any>) {
   return Object.fromEntries([...map.entries()].map(([kMaxLength, v]): any => [kMaxLength, v instanceof Map ? mapToObject(v) : v]))
+}
+
+const VERSION = {
+  MAJOR: 1,
+  MINOR: 1,
+  PATCH: 0
 }
 
 let clients: Record<string, WebSocket> = {};
@@ -31,7 +37,7 @@ wsServer.on('connection', (ws, req) => {
         // initialize per-client config store to avoid undefined access
         configs.set(id, new Map())
         log(id, 'ws init gedaan, client id gegeven. ip: ', req.socket.remoteAddress);
-        WsSend(ws, successPacketBuilder('init gedaan.', stringPacketOptions.initSuccess));
+        WsSend(ws, { type: requestType.Init, data: { versionMajor: VERSION.MAJOR, versionMinor: VERSION.MINOR, versionPatch: VERSION.MINOR } as InitResponsePacket } as packet);
         break;
       case requestType.RegisterService:
         data = jsonData.data as RegisterServicePacket;

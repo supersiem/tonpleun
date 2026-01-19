@@ -18,6 +18,12 @@ export type packet = {
 export type InitPacket = {
     ClientId: string,
 }
+// requestType.Init response
+export type InitResponsePacket = {
+    versionMajor: number,
+    versionMinor: number,
+    versionPatch: number,
+}
 // requestType.Success en requestType.Error
 export type StringPacket = {
     msg: string,

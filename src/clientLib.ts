@@ -1,13 +1,20 @@
 import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
-import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket, type registerConfigPacket, type setConfigPacket, type fakeTypeType } from './types.js';
+import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket, type registerConfigPacket, type setConfigPacket, type fakeTypeType, InitResponsePacket } from './types.js';
 import { WsSend } from './helpers.js';
+import { assert } from 'console';
 
 const url = "ws://localhost:8765";
 export let ws: WebSocket;
 const serviceCallbacks = new Map<string, (...args: any[]) => any>();
 let clinetIDStore = "error";
 const localConfigs = new Map<string, registerConfigPacket>();
+
+const VERSION = {
+    MAJOR: 1,
+    MINOR: 1,
+    PATCH: 0
+}
 
 export async function awaitServiceMessage(expectedFor: stringPacketOptions): Promise<StringPacket> {
     return new Promise<StringPacket>((resolve) => {
@@ -120,11 +127,23 @@ export async function initializeClient(ClientId: string) {
         }
     });
 
-    // Wacht tot de verbinding is geopend
-    return new Promise<void>((resolve) => {
-        awaitServiceMessage(stringPacketOptions.initSuccess).then(() => {
-            resolve();
-        });
+    return new Promise<StringPacket>((resolve) => {
+        const handler = (raw: Buffer) => {
+            const rawPacket = JSON.parse(raw.toString()) as packet;
+            if (rawPacket.type === requestType.Init) {
+                const data = rawPacket.data as InitResponsePacket;
+                assert(data.versionMajor === VERSION.MAJOR, `Major versie mismatch: Client versie is ${VERSION.MAJOR}, server versie is ${data.versionMajor}.`);
+                if (data.versionMinor !== VERSION.MINOR) {
+                    console.warn(`Waarschuwing: Minor versie mismatch: Client versie is ${VERSION.MINOR}, server versie is ${data.versionMinor}. Mogelijk zijn er incompatibiliteiten.`);
+                }
+                if (data.versionPatch !== VERSION.PATCH) {
+                    console.warn(`Waarschuwing: Patch versie mismatch: Client versie is ${VERSION.PATCH}, server versie is ${data.versionPatch}. Mogelijk zijn er bugs of ontbrekende functies.`);
+                }
+                ws.removeListener('message', handler);
+                resolve({ for: stringPacketOptions.initSuccess, msg: 'Init succesvol' } as StringPacket);
+            }
+        };
+        ws.on('message', handler);
     });
 }
 
