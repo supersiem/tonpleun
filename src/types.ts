@@ -6,7 +6,8 @@ export enum requestType {
     GetServiceResponse,
     GetService,
     RegisterConifg,
-    SetConfig
+    SetConfig,
+
 }
 export enum stringPacketOptions { Error, initSuccess, registerServiceSuccess, getServiceSuccess, registerConfigSuccess, setConfigSuccess };
 export type fakeTypeType = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
@@ -17,6 +18,7 @@ export type namedFakeType = {
 export type packet = {
     type: requestType,
     data: any,
+    key: any // <-- auth spull hier
 }
 // requestType.Init
 export type InitPacket = {

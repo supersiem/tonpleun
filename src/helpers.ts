@@ -8,5 +8,5 @@ export function WsSend(ws: WebSocket, data: packet) {
     ws.send(JSON.stringify(data));
 }
 export function successPacketBuilder(msg: string, B: stringPacketOptions) {
-    return { type: requestType.Success, data: { msg: msg, for: B } as StringPacket } as packet
+    return { type: requestType.Success, data: { msg: msg, for: B } as StringPacket, key: undefined } as packet
 }

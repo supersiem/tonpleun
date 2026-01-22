@@ -9,6 +9,13 @@
     "sourceMap": true, // generate source map
     "outDir": "dist", // output compiled js, d.ts, and source map to dist folder
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    // config the fucking ~ thing
+    "baseUrl": "./src",
+    "paths": {
+      "~/*": [
+        "./*"
+      ]
+    }
   }
 }

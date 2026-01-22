@@ -11,6 +11,7 @@ export let ws: WebSocket;
 const serviceCallbacks = new Map<string, (...args: any[]) => any>();
 let clinetIDStore = "error";
 const localConfigs = new Map<string, registerConfigPacket>();
+let key: any = undefined;
 
 const VERSION = {
     MAJOR: 1,
@@ -45,7 +46,7 @@ export async function awaitServiceMessage(expectedFor: stringPacketOptions): Pro
 }
 export async function registerConfigItem(name: string, description: string, value: string, idthing: string) {
 
-    WsSend(ws, { type: requestType.RegisterConifg, data: { name: name, description: description, defaultValue: value, type: typeof value, id: idthing } as registerConfigPacket })
+    WsSend(ws, { type: requestType.RegisterConifg, data: { name: name, description: description, defaultValue: value, type: typeof value, id: idthing } as registerConfigPacket, key })
     // Wacht tot de verbinding is geopend
     return new Promise<void>((resolve) => {
         awaitServiceMessage(stringPacketOptions.registerConfigSuccess).then(() => {
@@ -55,7 +56,7 @@ export async function registerConfigItem(name: string, description: string, valu
     });
 }
 export async function SetConfigItem(idthing: string, newValue: string, clientId?: string) {
-    WsSend(ws, { type: requestType.SetConfig, data: { ClientId: clientId || clinetIDStore, id: idthing, newValue: newValue } as setConfigPacket })
+    WsSend(ws, { type: requestType.SetConfig, data: { ClientId: clientId || clinetIDStore, id: idthing, newValue: newValue } as setConfigPacket, key })
     return new Promise<void>((resolve) => {
         awaitServiceMessage(stringPacketOptions.setConfigSuccess).then(() => {
             const existing = localConfigs.get(idthing);
@@ -68,7 +69,7 @@ export async function SetConfigItem(idthing: string, newValue: string, clientId?
 }
 
 export async function registerService(ServiceId: string, args: namedFakeType[], callback: (...args: any[]) => any) {
-    WsSend(ws, { type: requestType.RegisterService, data: { ServiceId, args } });
+    WsSend(ws, { type: requestType.RegisterService, data: { ServiceId, args }, key });
     serviceCallbacks.set(ServiceId, callback);
     return new Promise<void>((resolve) => {
         awaitServiceMessage(stringPacketOptions.registerServiceSuccess).then(() => {
@@ -78,7 +79,7 @@ export async function registerService(ServiceId: string, args: namedFakeType[], 
 }
 export async function getService(ServiceId: string, ClientId: string, inputs: any[]): Promise<any> {
     const connectionId = randomUUID();
-    WsSend(ws, { type: requestType.GetService, data: { ClientId, ServiceId, args: inputs, connectionId } as getServicePacketClient });
+    WsSend(ws, { type: requestType.GetService, data: { ClientId, ServiceId, args: inputs, connectionId } as getServicePacketClient, key });
     return new Promise<any>((resolve) => {
         const handler = (raw: Buffer) => {
             const rawPacket = JSON.parse(raw.toString()) as packet;
@@ -94,13 +95,14 @@ export async function getService(ServiceId: string, ClientId: string, inputs: an
     });
 }
 
-export async function initializeClient(ClientId: string) {
+export async function initializeClient(ClientId: string, creds?: any) {
     clinetIDStore = ClientId;
+    key = creds;
     ws = new WebSocket(url);
 
     ws.on('open', () => {
         console.log('Verbonden met tonpleun server.');
-        WsSend(ws, { type: requestType.Init, data: { ClientId } as InitPacket })
+        WsSend(ws, { type: requestType.Init, data: { ClientId } as InitPacket, key })
 
     });
     ws.on('close', () => {
@@ -123,7 +125,8 @@ export async function initializeClient(ClientId: string) {
                             result: result,
                             ServiceId: serviceData.ServiceId,
                             connectionId: serviceData.connectionId,
-                        } as GetServiceResponsePacketToServer
+                        } as GetServiceResponsePacketToServer,
+                        key
                     });
                 } catch (error) {
                     console.error(`Fout bij uitvoeren van service ${serviceData.ServiceId}:`, error);
@@ -164,4 +167,12 @@ export async function initializeClient(ClientId: string) {
 export function getConfigValue(id: string): any | undefined {
     const item = localConfigs.get(id);
     return item ? (item.value ?? item.defaultValue) : undefined;
+}
+export const TESTING_HELPERS = {
+    done: () => {
+        ws.send(JSON.stringify({ type: requestType.Success, data: { msg: 'done', for: stringPacketOptions.initSuccess } as StringPacket, key }));
+    },
+    error: (msg: string) => {
+        ws.send(JSON.stringify({ type: requestType.Success, data: { msg: msg, for: stringPacketOptions.initSuccess } as StringPacket, key }));
+    }
 }
