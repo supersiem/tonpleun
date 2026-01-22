@@ -16,7 +16,7 @@ let key: any = undefined;
 const VERSION = {
     MAJOR: 1,
     MINOR: 1,
-    PATCH: 2
+    PATCH: 3
 }
 export async function genHelper() {
     console.info('genHelper called');
