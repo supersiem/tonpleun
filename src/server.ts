@@ -58,15 +58,17 @@ localServices.set('genHelper', (...args: any[]) => {
   output += `import { getService } from './clientLib.js';\n\n`;
 
   services.forEach((serviceMap, clientId) => {
-    output += `// Services for client: ${clientId}\n`;
-    serviceMap.forEach((argTypes, serviceId) => {
-      output += `// ${serviceId}\n`;
-      output += `export async function ${serviceId}(`;
-      output += argTypes.map((type, _) => `${type.name}: ${type.type}`).join(', ');
-      output += `): Promise<any> {\n`;
-      output += `    return await getService('${serviceId}', '${clientId}', [${argTypes.map((arg, _) => `${arg.name}`).join(', ')}]);\n`;
-      output += `}\n\n`;
-    });
+    if (clientId == args[0].id) {
+      output += `// Services for client: ${clientId}\n`;
+      serviceMap.forEach((argTypes, serviceId) => {
+        output += `// ${serviceId}\n`;
+        output += `export async function ${serviceId}(`;
+        output += argTypes.map((type, _) => `${type.name}: ${type.type}`).join(', ');
+        output += `): Promise<any> {\n`;
+        output += `    return await getService('${serviceId}', '${clientId}', [${argTypes.map((arg, _) => `${arg.name}`).join(', ')}]);\n`;
+        output += `}\n\n`;
+      });
+    }
   });
 
   output += `// Tonpleun versie: ${VERSION.MAJOR}.${VERSION.MINOR}.${VERSION.PATCH}\n`;

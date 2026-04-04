@@ -1,7 +1,7 @@
 import { getService, initializeClient } from "./clientLib.js";
 async function main() {
     await initializeClient('webUI');
-    getData();
+    await getData();
     setInterval(getData, 1000);
 }
 async function getData() {

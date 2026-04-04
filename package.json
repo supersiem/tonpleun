@@ -21,11 +21,11 @@
   ],
   "scripts": {
     "start": "tsc && clear && node ./dist/server.js",
-    "test": "tsc --module es2022 && clear && node ./dist/tests/testMaster.js",
     "prebuild": "npm run clean",
     "clean": "rm -rf ./dist",
     "build": "tsc --module commonjs",
-    "preversion": "npm run build"
+    "preversion": "npm run build",
+    "dev": "bun run run-server.ts"
   },
   "dependencies": {
     "@types/ws": "^8.18.1",
