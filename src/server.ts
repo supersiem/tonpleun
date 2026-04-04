@@ -115,7 +115,7 @@ export default function startServer(customConfig?: Partial<configType>) {
           // initialize per-client config store to avoid undefined access
           configs.set(id, new Map())
           log(id, 'ws init gedaan, client id gegeven. ip: ', req.socket.remoteAddress);
-          WsSend(ws, { type: requestType.Init, data: { versionMajor: VERSION.MAJOR, versionMinor: VERSION.MINOR, versionPatch: VERSION.MINOR } as InitResponsePacket } as packet);
+          WsSend(ws, { type: requestType.Init, data: { versionMajor: VERSION.MAJOR, versionMinor: VERSION.MINOR, versionPatch: VERSION.PATCH } as InitResponsePacket } as packet);
           break;
         case requestType.RegisterService:
           data = jsonData.data as RegisterServicePacket;
