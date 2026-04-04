@@ -1,28 +1,34 @@
-# tonpleun  
+# Tonpleun: Server-to-Server Communication via WebSockets
 
-uhhh dit zijn zeer goede docs (nee)
-tonpleun is een websocket server die websocket clients verzoeken laat maken aan andere websocket clients die zich als service registreren.
-voor nu is tonpleun in js maar wrs moet ik het porten naar python omdat ik dan meer code kan hergebruiken voor andere projecten.
+## What Is Tonpleun?
 
-## Installatie
+Tonpleun is a communication layer that lets servers call functions on other servers and perform basic WebSocket communication with other servers or local clients.
 
-gebruik dit gewoon niet...
+It is designed to make building a network of communicating servers easier, without having to manage all low-level communication details yourself.
 
-maar als je het toch wilt gebruiken download de repo compile het met tsc en run main.js met node.
+## Features
 
-## Gebruik
+- Call functions on other servers
+- Send messages to other servers (message handling logic is up to your app)
+- Register config values that other clients can update
+- Basic client privilege levels
+- Simple API for registering and calling services
+- Optional schema-based validation for service input/output (for example with Zod)
 
-gebruik het niet  
-maar als je onverstandig genoeg bent om het toch te gebruiken gebruik lib.ts om een client te maken die verbinding maakt met de tonpleun server.
+## Installation
 
-## Configuratie
+```bash
+npm install tonpleun
+```
 
-tonpleun heeft geen configuratie opties.
+## Usage
 
-## Licentie
+See [run-server.ts](./run-server.ts) and [test-client.ts](./test-client.ts) for example usage.
 
-heel eerlijk het boeit me niet wat je doet met deze slechte code dus doe er mee wat je wilt.
+## AI-Generated Code
 
-## Bijdragen
+Some small parts of this codebase were made with AI assistance.
 
-uhhhhh maak een pr ofzo.  
+The only major AI-assisted part is the schema validation, which was added retroactively. This README was also improved with Copilot help for readability.
+
+English is not my first language, and I have dyslexia, so this workflow helps me write clearer documentation faster.

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export enum requestType {
     Init,
     Success,
@@ -7,14 +9,10 @@ export enum requestType {
     GetService,
     RegisterConifg,
     SetConfig,
-
+    SendExternalData,
 }
-export enum stringPacketOptions { Error, initSuccess, registerServiceSuccess, getServiceSuccess, registerConfigSuccess, setConfigSuccess };
-export type fakeTypeType = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
-export type namedFakeType = {
-    name: string,
-    type: fakeTypeType
-};
+export enum stringPacketOptions { Error, initSuccess, registerServiceSuccess, getServiceSuccess, registerConfigSuccess, setConfigSuccess, };
+export type configValueType = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function";
 export type packet = {
     type: requestType,
     data: any,
@@ -38,7 +36,6 @@ export type StringPacket = {
 // requestType.RegisterService
 export type RegisterServicePacket = {
     ServiceId: string,
-    args: namedFakeType[]
 }
 // requestType.GetService ( client1 -> server)
 export type getServicePacket = {
@@ -72,7 +69,7 @@ export type registerConfigPacket = {
     name: string,
     id: string,
     description: string,
-    type: fakeTypeType,
+    type: configValueType,
     defaultValue: any,
     value?: any
 }
@@ -82,3 +79,80 @@ export type setConfigPacket = {
     newValue: any,
     id: string
 }
+
+export type sendExternalDataPacket = {
+    ToClientId: string,
+    externalDataPacket: externalDataPacket
+}
+
+export type externalDataPacket = {
+    FromClientId: string,
+    data: any
+}
+
+export const configValueTypeSchema = z.enum(["string", "number", "bigint", "boolean", "symbol", "undefined", "object", "function"]);
+
+export const initPacketSchema = z.object({
+    ClientId: z.string().min(1)
+});
+
+export const initResponsePacketSchema = z.object({
+    versionMajor: z.number().int(),
+    versionMinor: z.number().int(),
+    versionPatch: z.number().int()
+});
+
+export const stringPacketSchema = z.object({
+    msg: z.string(),
+    for: z.nativeEnum(stringPacketOptions)
+});
+
+export const registerServicePacketSchema = z.object({
+    ServiceId: z.string().min(1)
+});
+
+export const getServicePacketSchema = z.object({
+    ClientId: z.string().min(1),
+    ServiceId: z.string().min(1),
+    connectionId: z.string().min(1),
+    args: z.array(z.unknown())
+});
+
+export const getServicePacketClientSchema = z.object({
+    ServiceId: z.string().min(1),
+    args: z.array(z.unknown()),
+    connectionId: z.string().min(1)
+});
+
+export const getServiceResponsePacketToServerSchema = z.object({
+    ServiceId: z.string().min(1),
+    result: z.unknown(),
+    connectionId: z.string().min(1)
+});
+
+export const getServiceResponsePacketToClientSchema = z.object({
+    result: z.unknown(),
+    serviceId: z.string().min(1),
+    connectionId: z.string().min(1)
+});
+
+export const registerConfigPacketSchema = z.object({
+    name: z.string().min(1),
+    id: z.string().min(1),
+    description: z.string(),
+    type: configValueTypeSchema,
+    defaultValue: z.unknown(),
+    value: z.unknown().optional()
+});
+
+export const setConfigPacketSchema = z.object({
+    ClientId: z.string().min(1),
+    newValue: z.unknown(),
+    id: z.string().min(1)
+});
+
+export const packetSchema = z.object({
+    type: z.nativeEnum(requestType),
+    data: z.unknown(),
+    key: z.unknown().optional()
+});

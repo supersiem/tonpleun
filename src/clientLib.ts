@@ -1,15 +1,50 @@
 import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
-import { requestType, stringPacketOptions, type getServicePacketClient, type GetServiceResponsePacketToServer, type GetServiceResponsePacketToClient, type InitPacket, type packet, type StringPacket, type registerConfigPacket, type setConfigPacket, type fakeTypeType, type namedFakeType, InitResponsePacket } from './types.js';
+import {
+  requestType,
+  stringPacketOptions,
+  type getServicePacketClient,
+  type GetServiceResponsePacketToServer,
+  type GetServiceResponsePacketToClient,
+  type InitPacket,
+  type packet,
+  type StringPacket,
+  type registerConfigPacket,
+  type setConfigPacket,
+  InitResponsePacket,
+  getServicePacketClientSchema,
+  getServiceResponsePacketToClientSchema,
+  initResponsePacketSchema,
+  packetSchema,
+  setConfigPacketSchema,
+  stringPacketSchema
+} from './types.js';
 import { WsSend } from './helpers.js';
 import { assert } from 'console';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
 
+type ValidationSuccess = {
+  success: true;
+  data: unknown;
+};
+
+type ValidationFailure = {
+  success: false;
+  error?: {
+    issues?: unknown;
+  } | unknown;
+};
+
+export type ServiceInputValidator = {
+  safeParse: (data: unknown) => ValidationSuccess | ValidationFailure;
+};
+
 export default class Tonpleun {
   private url = "ws://localhost:8765";
   public ws: WebSocket;
   private serviceCallbacks = new Map<string, (...args: any[]) => any>();
+  private serviceInputSchemas = new Map<string, ServiceInputValidator>();
   private clinetIDStore = "error";
   private localConfigs = new Map<string, registerConfigPacket>();
   private key: any = undefined;
@@ -20,23 +55,27 @@ export default class Tonpleun {
     MINOR: 1,
     PATCH: 3
   }
-  public async genHelper(hostId: string) {
-    console.info('genHelper called');
-    const result = await this.getService('genHelper', 'tonpleun', [{ id: hostId }]);
-
-    const outPath = dirname('./gen/GEN.ts');
-    mkdirSync(outPath, { recursive: true });
-    writeFileSync('./gen/GEN.ts', result);
-    console.info('GEN.ts gegenereerd in ./gen/GEN.ts');
-    return result;
-  }
 
   public async awaitServiceMessage(expectedFor: stringPacketOptions): Promise<StringPacket> {
     return new Promise<StringPacket>((resolve) => {
       const handler = (raw: Buffer) => {
-        const rawPacket = JSON.parse(raw.toString()) as packet;
+        let parsedRaw: unknown;
+        try {
+          parsedRaw = JSON.parse(raw.toString());
+        } catch {
+          return;
+        }
+        const packetResult = packetSchema.safeParse(parsedRaw);
+        if (!packetResult.success) {
+          return;
+        }
+        const rawPacket = packetResult.data as packet;
         if (rawPacket.type === requestType.Success) {
-          const data = rawPacket.data as StringPacket;
+          const stringResult = stringPacketSchema.safeParse(rawPacket.data);
+          if (!stringResult.success) {
+            return;
+          }
+          const data = stringResult.data as StringPacket;
           if (data.for === expectedFor) {
             this.ws.removeListener('message', handler);
             resolve(data);
@@ -51,7 +90,7 @@ export default class Tonpleun {
     const waitForAck = this.awaitServiceMessage(stringPacketOptions.registerConfigSuccess);
     WsSend(this.ws, { type: requestType.RegisterConifg, data: { name: name, description: description, defaultValue: value, type: typeof value, id: idthing } as registerConfigPacket, key: this.key })
     await waitForAck;
-    this.localConfigs.set(idthing, { name, id: idthing, description, type: typeof value as fakeTypeType, defaultValue: value } as registerConfigPacket)
+    this.localConfigs.set(idthing, { name, id: idthing, description, type: typeof value as registerConfigPacket['type'], defaultValue: value } as registerConfigPacket)
   }
   public async SetConfigItem(idthing: string, newValue: string, clientId?: string) {
     await this.initialized;
@@ -63,11 +102,14 @@ export default class Tonpleun {
       this.localConfigs.set(idthing, { ...existing, value: newValue } as registerConfigPacket);
     }
   }
-  public async registerService(ServiceId: string, args: namedFakeType[], callback: (...args: any[]) => any) {
+  public async registerService(ServiceId: string, callback: (...args: any[]) => any, inputSchema?: ServiceInputValidator) {
     await this.initialized;
     const waitForAck = this.awaitServiceMessage(stringPacketOptions.registerServiceSuccess);
     this.serviceCallbacks.set(ServiceId, callback);
-    WsSend(this.ws, { type: requestType.RegisterService, data: { ServiceId, args }, key: this.key });
+    if (inputSchema) {
+      this.serviceInputSchemas.set(ServiceId, inputSchema);
+    }
+    WsSend(this.ws, { type: requestType.RegisterService, data: { ServiceId }, key: this.key });
     await waitForAck;
   }
   public async getService(ServiceId: string, ClientId: string, inputs: any[]): Promise<any> {
@@ -75,9 +117,23 @@ export default class Tonpleun {
     const connectionId = randomUUID();
     const responsePromise = new Promise<any>((resolve) => {
       const handler = (raw: Buffer) => {
-        const rawPacket = JSON.parse(raw.toString()) as packet;
+        let parsedRaw: unknown;
+        try {
+          parsedRaw = JSON.parse(raw.toString());
+        } catch {
+          return;
+        }
+        const packetResult = packetSchema.safeParse(parsedRaw);
+        if (!packetResult.success) {
+          return;
+        }
+        const rawPacket = packetResult.data as packet;
         if (rawPacket.type === requestType.GetServiceResponse) {
-          const data = rawPacket.data as GetServiceResponsePacketToClient;
+          const responseResult = getServiceResponsePacketToClientSchema.safeParse(rawPacket.data);
+          if (!responseResult.success) {
+            return;
+          }
+          const data = responseResult.data as GetServiceResponsePacketToClient;
           if (data.serviceId === ServiceId && data.connectionId === connectionId) {
             this.ws.removeListener('message', handler);
             resolve(data.result);
@@ -107,13 +163,52 @@ export default class Tonpleun {
       this.ws.close();
     });
     this.ws.on('message', (data) => {
-      const rawPacket = JSON.parse(data.toString()) as packet
+      let parsedRaw: unknown;
+      try {
+        parsedRaw = JSON.parse(data.toString());
+      } catch {
+        return;
+      }
+      const packetResult = packetSchema.safeParse(parsedRaw);
+      if (!packetResult.success) {
+        return;
+      }
+      const rawPacket = packetResult.data as packet
       if (rawPacket.type === requestType.GetService) {
-        const serviceData = rawPacket.data as getServicePacketClient;
+        const serviceDataResult = getServicePacketClientSchema.safeParse(rawPacket.data);
+        if (!serviceDataResult.success) {
+          return;
+        }
+        const serviceData = serviceDataResult.data as getServicePacketClient;
         const callback = this.serviceCallbacks.get(serviceData.ServiceId);
         if (callback) {
           try {
-            const result = callback(...serviceData.args);
+            const schema = this.serviceInputSchemas.get(serviceData.ServiceId);
+            let callbackArgs: any[] = serviceData.args;
+            if (schema) {
+              const schemaResult = schema.safeParse(serviceData.args);
+              if (!schemaResult.success) {
+                const validationError = schemaResult.error;
+                const issues = (typeof validationError === 'object' && validationError !== null && 'issues' in validationError)
+                  ? (validationError as { issues?: unknown }).issues
+                  : validationError;
+                WsSend(this.ws, {
+                  type: requestType.GetServiceResponse, data: {
+                    result: {
+                      error: 'Invalid service input',
+                      issues
+                    },
+                    ServiceId: serviceData.ServiceId,
+                    connectionId: serviceData.connectionId,
+                  } as GetServiceResponsePacketToServer,
+                  key: this.key
+                });
+                return;
+              }
+              callbackArgs = Array.isArray(schemaResult.data) ? schemaResult.data : [schemaResult.data];
+            }
+
+            const result = callback(...callbackArgs);
             WsSend(this.ws, {
               type: requestType.GetServiceResponse, data: {
                 result: result,
@@ -128,7 +223,11 @@ export default class Tonpleun {
         }
 
       } else if (rawPacket.type === requestType.SetConfig) {
-        const cfg = rawPacket.data as setConfigPacket;
+        const setConfigResult = setConfigPacketSchema.safeParse(rawPacket.data);
+        if (!setConfigResult.success) {
+          return;
+        }
+        const cfg = setConfigResult.data as setConfigPacket;
         const existing = this.localConfigs.get(cfg.id);
         if (existing) {
           this.localConfigs.set(cfg.id, { ...existing, value: cfg.newValue } as registerConfigPacket);
@@ -137,9 +236,23 @@ export default class Tonpleun {
     });
     this.initialized = new Promise<StringPacket>((resolve) => {
       const handler = (raw: Buffer) => {
-        const rawPacket = JSON.parse(raw.toString()) as packet;
+        let parsedRaw: unknown;
+        try {
+          parsedRaw = JSON.parse(raw.toString());
+        } catch {
+          return;
+        }
+        const packetResult = packetSchema.safeParse(parsedRaw);
+        if (!packetResult.success) {
+          return;
+        }
+        const rawPacket = packetResult.data as packet;
         if (rawPacket.type === requestType.Init) {
-          const data = rawPacket.data as InitResponsePacket;
+          const initResult = initResponsePacketSchema.safeParse(rawPacket.data);
+          if (!initResult.success) {
+            return;
+          }
+          const data = initResult.data as InitResponsePacket;
           assert(data.versionMajor === this.VERSION.MAJOR, `Major versie mismatch: Client versie is ${this.VERSION.MAJOR}, server versie is ${data.versionMajor}.`);
           if (data.versionMinor !== this.VERSION.MINOR) {
             console.warn(`Waarschuwing: Minor versie mismatch: Client versie is ${this.VERSION.MINOR}, server versie is ${data.versionMinor}. Mogelijk zijn er incompatibiliteiten.`);

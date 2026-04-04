@@ -1,9 +1,35 @@
 import { log, successPacketBuilder, WsSend } from './helpers.js';
 import { WebSocketServer, WebSocket } from 'ws';
-import { InitResponsePacket, type StringPacket, requestType, stringPacketOptions, type namedFakeType, type getServicePacket, type getServicePacketClient, type GetServiceResponsePacketToClient, type InitPacket, type packet, type registerConfigPacket, type RegisterServicePacket, type setConfigPacket } from './types.js';
+import {
+  InitResponsePacket,
+  type StringPacket,
+  requestType,
+  stringPacketOptions,
+  type getServicePacket,
+  type getServicePacketClient,
+  type GetServiceResponsePacketToClient,
+  type InitPacket,
+  type packet,
+  type registerConfigPacket,
+  type RegisterServicePacket,
+  type setConfigPacket,
+  getServicePacketSchema,
+  getServiceResponsePacketToServerSchema,
+  initPacketSchema,
+  packetSchema,
+  registerConfigPacketSchema,
+  registerServicePacketSchema,
+  setConfigPacketSchema,
+  sendExternalDataPacket
+} from './types.js';
 
 function mapToObject(map: Map<any, any>) {
-  return Object.fromEntries([...map.entries()].map(([kMaxLength, v]): any => [kMaxLength, v instanceof Map ? mapToObject(v) : v]))
+  return Object.fromEntries([
+    ...map.entries()
+  ].map(([kMaxLength, v]): any => [
+    kMaxLength,
+    v instanceof Map ? mapToObject(v) : v instanceof Set ? [...v.values()] : v
+  ]))
 }
 
 const VERSION = {
@@ -45,36 +71,12 @@ const unprivlegedError = {
 } as packet;
 
 let clients: Record<string, WebSocket> = {};
-let services = new Map<string, Map<string, namedFakeType[]>>();
+let services = new Map<string, Set<string>>();
 let configs = new Map<string, Map<string, registerConfigPacket>>();
 let localServices = new Map<string, (...args: any[]) => any>();
 localServices.set('getServices', (...args: any[]) => { if (!config.ALLOW_SCANNING) { return; } return mapToObject(services) })
 localServices.set('getConfigs', (...args: any[]) => { if (!config.ALLOW_SCANNING) { return; } return mapToObject(configs) })
-localServices.set('genHelper', (...args: any[]) => {
-  if (!config.ALLOW_CONFIG_GENERATION) {
-    return;
-  }
-  let output = '/* Dit bestand is automatisch gegenereerd door Tonpleun. Wijzigingen hierin worden overschreven. */\n\n';
-  output += `import { getService } from './clientLib.js';\n\n`;
 
-  services.forEach((serviceMap, clientId) => {
-    if (clientId == args[0].id) {
-      output += `// Services for client: ${clientId}\n`;
-      serviceMap.forEach((argTypes, serviceId) => {
-        output += `// ${serviceId}\n`;
-        output += `export async function ${serviceId}(`;
-        output += argTypes.map((type, _) => `${type.name}: ${type.type}`).join(', ');
-        output += `): Promise<any> {\n`;
-        output += `    return await getService('${serviceId}', '${clientId}', [${argTypes.map((arg, _) => `${arg.name}`).join(', ')}]);\n`;
-        output += `}\n\n`;
-      });
-    }
-  });
-
-  output += `// Tonpleun versie: ${VERSION.MAJOR}.${VERSION.MINOR}.${VERSION.PATCH}\n`;
-  output += `// Genereer dit bestand opnieuw met de genHelper service indien services zijn gewijzigd.\n`;
-  return output;
-});
 // Map a unique connectionId to the original requester WebSocket
 const connectionMap = new Map<string, WebSocket>();
 
@@ -98,11 +100,30 @@ export default function startServer(customConfig?: Partial<configType>) {
     log(id, 'ws verbonden wachten op init.');
 
     ws.on('message', async (raw) => {
-      const jsonData = JSON.parse(raw.toString()) as packet;
+      let parsedRaw: unknown;
+      try {
+        parsedRaw = JSON.parse(raw.toString());
+      } catch {
+        log(id, 'invalid json ontvangen.');
+        return;
+      }
+      const parsedPacket = packetSchema.safeParse(parsedRaw);
+      if (!parsedPacket.success) {
+        log(id, 'ongeldig packet ontvangen.');
+        return;
+      }
+      const jsonData = parsedPacket.data as packet;
       let data;
       switch (jsonData.type) {
         case requestType.Init:
-          data = jsonData.data as InitPacket;
+          {
+            const initData = initPacketSchema.safeParse(jsonData.data);
+            if (!initData.success) {
+              log(id, 'ongeldig init packet ontvangen.');
+              return;
+            }
+            data = initData.data as InitPacket;
+          }
           clients[data.ClientId] = ws;
           id = data.ClientId;
           // voor deze kunnen we direct afsluiten als ze niet mogen initen
@@ -111,25 +132,39 @@ export default function startServer(customConfig?: Partial<configType>) {
             ws.close();
             return;
           }
-          services.set(id, new Map())
+          services.set(id, new Set())
           // initialize per-client config store to avoid undefined access
           configs.set(id, new Map())
           log(id, 'ws init gedaan, client id gegeven. ip: ', req.socket.remoteAddress);
           WsSend(ws, { type: requestType.Init, data: { versionMajor: VERSION.MAJOR, versionMinor: VERSION.MINOR, versionPatch: VERSION.PATCH } as InitResponsePacket } as packet);
           break;
         case requestType.RegisterService:
-          data = jsonData.data as RegisterServicePacket;
+          {
+            const registerData = registerServicePacketSchema.safeParse(jsonData.data);
+            if (!registerData.success) {
+              log(id, 'ongeldig register service packet ontvangen.');
+              return;
+            }
+            data = registerData.data as RegisterServicePacket;
+          }
           if (!privlegeCheck(id, 5)) {
             log(id, 'register service geweigerd vanwege privleges.');
             WsSend(ws, unprivlegedError);
             return;
           }
-          services.get(id)!.set(data.ServiceId, data.args);
+          services.get(id)!.add(data.ServiceId);
           log(id, `service ${data.ServiceId} geregistreerd.`);
           WsSend(ws, successPacketBuilder(`service ${data.ServiceId} geregistreerd.`, stringPacketOptions.registerServiceSuccess));
           break;
         case requestType.GetService:
-          data = jsonData.data as getServicePacket;
+          {
+            const getServiceData = getServicePacketSchema.safeParse(jsonData.data);
+            if (!getServiceData.success) {
+              log(id, 'ongeldig get service packet ontvangen.');
+              return;
+            }
+            data = getServiceData.data as getServicePacket;
+          }
           log(id, `service ${data.ServiceId} opgevraagd bij client ${data.ClientId}.`);
           if (!privlegeCheck(id, PRIVLEGE_LEVELS.SERVICE_ACCESS)) {
             log(id, 'get service geweigerd vanwege privleges.');
@@ -167,7 +202,14 @@ export default function startServer(customConfig?: Partial<configType>) {
           }
           break;
         case requestType.GetServiceResponse:
-          data = jsonData.data;
+          {
+            const responseData = getServiceResponsePacketToServerSchema.safeParse(jsonData.data);
+            if (!responseData.success) {
+              log(id, 'ongeldig get service response packet ontvangen.');
+              return;
+            }
+            data = responseData.data;
+          }
           if (!privlegeCheck(id, PRIVLEGE_LEVELS.SERVICE_ACCESS)) {
             console.error('GetServiceResponse received from unprivileged client how tf does this even happen:', id);
             WsSend(ws, unprivlegedError);
@@ -189,7 +231,14 @@ export default function startServer(customConfig?: Partial<configType>) {
           }
           break;
         case requestType.RegisterConifg:
-          data = jsonData.data as registerConfigPacket;
+          {
+            const registerConfigData = registerConfigPacketSchema.safeParse(jsonData.data);
+            if (!registerConfigData.success) {
+              log(id, 'ongeldig register config packet ontvangen.');
+              return;
+            }
+            data = registerConfigData.data as registerConfigPacket;
+          }
           if (!privlegeCheck(id, PRIVLEGE_LEVELS.CONFIG_ACCESS)) {
             log(id, 'register geweigerd vanwege privleges.');
             WsSend(ws, unprivlegedError);
@@ -206,7 +255,14 @@ export default function startServer(customConfig?: Partial<configType>) {
             WsSend(ws, unprivlegedError);
             return;
           }
-          data = jsonData.data as setConfigPacket;
+          {
+            const setConfigData = setConfigPacketSchema.safeParse(jsonData.data);
+            if (!setConfigData.success) {
+              log(id, 'ongeldig set config packet ontvangen.');
+              return;
+            }
+            data = setConfigData.data as setConfigPacket;
+          }
           log(id, 'update de dinges');
           const otherGuy = clients[data.ClientId]
           if (otherGuy) {
@@ -233,6 +289,26 @@ export default function startServer(customConfig?: Partial<configType>) {
             console.error(jsonData.data.msg);
             wsServer.close();
             console.info('test server afgesloten.');
+          }
+          break;
+        case requestType.SendExternalData:
+          {
+            if (!privlegeCheck(id, PRIVLEGE_LEVELS.FULL_ACCESS)) {
+              log(id, 'Externe data verzenden geweigerd vanwege privleges.');
+              WsSend(ws, unprivlegedError);
+              return;
+            }
+            const externalData = jsonData.data as sendExternalDataPacket;
+            const recipientWs = clients[externalData.ToClientId];
+            if (recipientWs) {
+              WsSend(recipientWs, {
+                type: requestType.SendExternalData,
+                data: externalData.externalDataPacket,
+                key: undefined
+              });
+            } else {
+              log(id, `externe data ontvanger ${externalData.ToClientId} niet gevonden.`);
+            }
           }
           break;
         default:

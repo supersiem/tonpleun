@@ -53,8 +53,8 @@ function WsSend(ws, data) {
     }
 }
 
-export async function registerService(ServiceId, args, callback) {
-    WsSend(ws, { type: requestType.RegisterService, data: { ServiceId, args } });
+export async function registerService(ServiceId, callback) {
+    WsSend(ws, { type: requestType.RegisterService, data: { ServiceId } });
     serviceCallbacks.set(ServiceId, callback);
     return await awaitServiceMessage(stringPacketOptions.registerServiceSuccess);
 }
