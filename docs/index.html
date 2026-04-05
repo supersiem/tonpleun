@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tonpleun</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" 
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-bs-spy="scroll" data-bs-target="#navbar" data-bs-smooth-scroll="true" tabindex="0">
+    <!-- Navigation -->
+    <nav id="navbar" class="navbar navbar-expand-sm navbar-dark bg-dark d-md-flex justify-content-md-between">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Tonpleun</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#installation">Installation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#examples">Examples</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#api">API</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="https://github.com/supersiem/Tonpleun" class="bi bi-github nav-link" target="_blank"></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="px-4 pt-5 my-5 text-center border-bottom">
+        <h1 class="display-1 fw-bold text-body-emphasis">Tonpleun</h1>
+        <div class="col-lg-6 mx-auto">
+            <p class="lead mb-4">Server-to-Server Communication via WebSockets</p>
+            <p class="mb-4">A lightweight communication layer that lets servers call functions on other servers and perform WebSocket communication effortlessly.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">
+                <button type="button" class="btn btn-outline-light btn-lg px-4" onclick="window.location.href='#installation'">Get Started</button>
+                <button type="button" class="btn btn-outline-secondary btn-lg px-4" onclick="window.location.href='https://github.com/supersiem/Tonpleun'">GitHub</button>
+            </div>
+        </div>
+        <div class="overflow-hidden" style="max-height: 30vh;">
+            <div class="container px-5">
+                <div class="bg-black border rounded-3 shadow-lg mb-4 p-4">
+                    <pre class="mb-0 text-success"><code>npm install @siemsiem/tonpleun</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="container px-4 pt-5 my-5" id="features">
+        <h1 class="text-center mb-5">Features</h1>
+        <div class="d-flex justify-content-center flex-column">
+            <div class="d-flex justify-content-center flex-row gap-3 flex-wrap">
+                <div class="card col-md-3">
+                    <div class="card-body text-center">
+                        <i class="bi bi-lightning-charge fs-1 mb-3"></i>
+                        <h5 class="card-title">Remote Function Calls</h5>
+                        <p class="card-text">Call functions on other servers as easily as calling local functions.</p>
+                    </div>
+                </div>
+                <div class="card col-md-3">
+                    <div class="card-body text-center">
+                        <i class="bi bi-diagram-3 fs-1 mb-3"></i>
+                        <h5 class="card-title">Server-to-Server Messaging</h5>
+                        <p class="card-text">Send messages between servers with custom handling logic.</p>
+                    </div>
+                </div>
+                <div class="card col-md-3">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shield-check fs-1 mb-3"></i>
+                        <h5 class="card-title">Schema Validation</h5>
+                        <p class="card-text">Optional input/output validation with Zod schemas.</p>
+                    </div>
+                </div>
+                <div class="card col-md-3">
+                    <div class="card-body text-center">
+                        <i class="bi bi-gear fs-1 mb-3"></i>
+                        <h5 class="card-title">Config Management</h5>
+                        <p class="card-text">Register config values that clients can update dynamically.</p>
+                    </div>
+                </div>
+                <div class="card col-md-3">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-lock fs-1 mb-3"></i>
+                        <h5 class="card-title">Privilege Levels</h5>
+                        <p class="card-text">Basic client privilege system for access control.</p>
+                    </div>
+                </div>
+                <div class="card col-md-3">
+                    <div class="card-body text-center">
+                        <i class="bi bi-code-slash fs-1 mb-3"></i>
+                        <h5 class="card-title">Simple API</h5>
+                        <p class="card-text">Easy-to-use API for registering and calling services.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Installation Section -->
+    <div class="container px-4 pt-5 my-5" id="installation">
+        <h1 class="text-center mb-5">Installation</h1>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card bg-dark">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Install via npm</h5>
+                        <pre class="bg-black text-success p-3 rounded border border-secondary"><code>npm install @siemsiem/tonpleun</code></pre>
+                        
+                        <h5 class="card-title mt-4 mb-3">Requirements</h5>
+                        <ul>
+                            <li>Node.js (latest LTS version recommended)</li>
+                            <li>WebSocket support (ws package included)</li>
+                            <li>Optional: Zod for schema validation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Examples Section -->
+    <div class="container px-4 pt-5 my-5" id="examples">
+        <h1 class="text-center mb-5">Examples</h1>
+            
+        <!-- Example 1: Basic Server Setup -->
+        <div class="mb-5">
+            <h3 class="mb-3"><i class="bi bi-server"></i> Basic Server Setup</h3>
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <pre class="mb-0 bg-black text-light"><code class="language-typescript">import startServer from '@siemsiem/tonpleun/server'
+
+// Start a Tonpleun server (defaults to ws://localhost:8765)
+startServer()</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 2: Registering a Service -->
+        <div class="mb-5">
+            <h3 class="mb-3"><i class="bi bi-card-list"></i> Registering a Service</h3>
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <pre class="mb-0 bg-black text-light"><code class="language-typescript">import Tonpleun from '@siemsiem/tonpleun'
+import { z } from 'zod'
+
+// Create a client instance with a unique ID
+const provider = new Tonpleun('provider-server')
+
+// Wait for initialization before registering services
+await provider.initialized
+
+// Register a simple service
+await provider.registerService(
+    'add',
+    (a: number, b: number) => a + b
+)
+
+// Register a service with Zod validation
+const multiplySchema = z.tuple([z.number(), z.number()])
+
+await provider.registerService(
+    'multiply',
+    (a: number, b: number) => a * b,
+    multiplySchema  // Optional input validation
+)</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 3: Calling Remote Services -->
+        <div class="mb-5">
+            <h3 class="mb-3"><i class="bi bi-telephone"></i> Calling Remote Services</h3>
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <pre class="mb-0 bg-black text-light"><code class="language-typescript">import Tonpleun from '@siemsiem/tonpleun'
+
+// Create consumer client
+const consumer = new Tonpleun('consumer-client')
+
+// Wait for initialization
+await consumer.initialized
+
+// Call a service on another client
+// getService(ServiceId, ClientId, args)
+const result = await consumer.getService('add', 'provider-server', [5, 3])
+
+console.log(result) // 8
+
+// If validation fails, you'll get an error object
+const invalid = await consumer.getService('add', 'provider-server', ['x', 3])
+// Returns: { error: 'Invalid service input', issues: [...] }</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 4: Complete Example -->
+        <div class="mb-5">
+            <h3 class="mb-3"><i class="bi bi-code-square"></i> Complete Example</h3>
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <pre class="mb-0 bg-black text-light"><code class="language-typescript">import Tonpleun from '@siemsiem/tonpleun'
+import { z } from 'zod'
+
+async function main() {
+    // Create two clients
+    const provider = new Tonpleun('provider')
+    const consumer = new Tonpleun('consumer')
+
+    // Define validation schema
+    const addArgsSchema = z.tuple([z.number(), z.number()])
+
+    // Register service on provider
+    await provider.registerService(
+        'add',
+        (a: number, b: number) => a + b,
+        addArgsSchema
+    )
+
+    // Call service from consumer
+    const result = await consumer.getService('add', 'provider', [2, 3])
+    
+    if (result !== 5) {
+        throw new Error(`Expected 5, got: ${result}`)
+    }
+
+    console.log('Success! 2 + 3 =', result)
+}
+
+main()</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example 5: Config Management -->
+        <div class="mb-5">
+            <h3 class="mb-3"><i class="bi bi-sliders"></i> Config Management</h3>
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <pre class="mb-0 bg-black text-light"><code class="language-typescript">import Tonpleun from '@siemsiem/tonpleun'
+
+const client = new Tonpleun('config-manager')
+await client.initialized
+
+// Register a config item
+await client.registerConfigItem(
+    'maxConnections',           // name
+    'Maximum connections',      // description
+    '100',                      // default value
+    'max-conn-id'              // unique ID
+)
+
+// Update config value
+await client.SetConfigItem('max-conn-id', '200')
+
+// Get config value locally
+const value = client.getConfigValue('max-conn-id')
+console.log('Max connections:', value) // '200'</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Reference Section -->
+    <div class="container px-4 pt-5 my-5" id="api">
+        <h1 class="text-center mb-5">API Reference</h1>
+            
+        <div class="accordion" id="apiAccordion">
+            <!-- Tonpleun Constructor -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#apiConstructor">
+                        <code>new Tonpleun(ClientId: string, creds?: any)</code>
+                    </button>
+                </h2>
+                <div id="apiConstructor" class="accordion-collapse collapse show" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                            <p>Creates a new Tonpleun client instance. Connects to ws://localhost:8765 by default.</p>
+                            <strong>Parameters:</strong>
+                            <ul>
+                                <li><code>ClientId</code> (string) - Unique identifier for this client</li>
+                                <li><code>creds</code> (any, optional) - Authentication credentials</li>
+                            </ul>
+                            <strong>Properties:</strong>
+                            <ul>
+                                <li><code>initialized</code> - Promise that resolves when client is ready</li>
+                                <li><code>ws</code> - WebSocket instance</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- registerService -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiRegisterService">
+                        <code>registerService(ServiceId: string, callback: Function, inputSchema?: any)</code>
+                    </button>
+                </h2>
+                <div id="apiRegisterService" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                            <p>Registers a service that can be called by other clients.</p>
+                            <strong>Parameters:</strong>
+                            <ul>
+                                <li><code>ServiceId</code> (string) - Unique service identifier</li>
+                                <li><code>callback</code> (Function) - Function to execute when service is called</li>
+                                <li><code>inputSchema</code> (optional) - Zod schema for input validation</li>
+                            </ul>
+                            <strong>Returns:</strong> Promise&lt;void&gt;
+                        </div>
+                    </div>
+                </div>
+
+            <!-- getService -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiCallService">
+                        <code>getService(ServiceId: string, ClientId: string, inputs: any[])</code>
+                    </button>
+                </h2>
+                <div id="apiCallService" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                            <p>Calls a service registered on another client.</p>
+                            <strong>Parameters:</strong>
+                            <ul>
+                                <li><code>ServiceId</code> (string) - Service identifier to call</li>
+                                <li><code>ClientId</code> (string) - Target client that has the service</li>
+                                <li><code>inputs</code> (any[]) - Array of arguments to pass</li>
+                            </ul>
+                            <strong>Returns:</strong> Promise&lt;any&gt; - Result from the service or error object
+                        </div>
+                    </div>
+                </div>
+
+            <!-- registerConfigItem -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiRegisterConfig">
+                        <code>registerConfigItem(name, description, value, id)</code>
+                    </button>
+                </h2>
+                <div id="apiRegisterConfig" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                            <p>Registers a configuration item that can be updated.</p>
+                            <strong>Parameters:</strong>
+                            <ul>
+                                <li><code>name</code> (string) - Config name</li>
+                                <li><code>description</code> (string) - Config description</li>
+                                <li><code>value</code> (string) - Default value</li>
+                                <li><code>id</code> (string) - Unique identifier</li>
+                            </ul>
+                            <strong>Returns:</strong> Promise&lt;void&gt;
+                        </div>
+                    </div>
+                </div>
+
+            <!-- SetConfigItem -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiSetConfig">
+                        <code>SetConfigItem(id: string, newValue: string, clientId?: string)</code>
+                    </button>
+                </h2>
+                <div id="apiSetConfig" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                            <p>Updates a configuration item value.</p>
+                            <strong>Parameters:</strong>
+                            <ul>
+                                <li><code>id</code> (string) - Config identifier</li>
+                                <li><code>newValue</code> (string) - New value</li>
+                                <li><code>clientId</code> (string, optional) - Target client</li>
+                            </ul>
+                            <strong>Returns:</strong> Promise&lt;void&gt;
+                        </div>
+                    </div>
+                </div>
+
+            <!-- getConfigValue -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiGetConfig">
+                        <code>getConfigValue(id: string)</code>
+                    </button>
+                </h2>
+                <div id="apiGetConfig" class="accordion-collapse collapse" data-bs-parent="#apiAccordion">
+                    <div class="accordion-body">
+                            <p>Gets a local configuration value.</p>
+                            <strong>Parameters:</strong>
+                            <ul>
+                                <li><code>id</code> (string) - Config identifier</li>
+                            </ul>
+                            <strong>Returns:</strong> any | undefined
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="container">
+        <footer class="py-3 my-4">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+                <li class="nav-item"><a href="#features" class="nav-link px-2 text-body-secondary">Features</a></li>
+                <li class="nav-item"><a href="#installation" class="nav-link px-2 text-body-secondary">Installation</a></li>
+                <li class="nav-item"><a href="#examples" class="nav-link px-2 text-body-secondary">Examples</a></li>
+                <li class="nav-item"><a href="#api" class="nav-link px-2 text-body-secondary">API</a></li>
+            </ul>
+            <p class="text-center text-body-secondary">&copy; 2026 Tonpleun by Siemvk</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

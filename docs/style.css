@@ -1,0 +1,114 @@
+/* Custom Styles for Tonpleun Website */
+
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    scroll-behavior: smooth;
+}
+
+/* Code Blocks */
+pre {
+    border-radius: 8px;
+    overflow-x: auto;
+    background-color: #0d1117 !important;
+    color: #c9d1d9;
+}
+
+pre code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #c9d1d9;
+}
+
+.card pre {
+    background-color: #0d1117 !important;
+    border: 1px solid #30363d;
+    padding: 1rem;
+    margin-bottom: 0;
+}
+
+.card .card-body {
+    background-color: #161b22;
+}
+
+.accordion-body {
+    background-color: #161b22 !important;
+}
+
+/* Cards */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+/* Sections */
+section {
+    scroll-margin-top: 70px;
+}
+
+/* Accordion */
+.accordion-button:not(.collapsed) {
+    background-color: #e7f1ff;
+    color: var(--primary-color);
+}
+
+.accordion-button code {
+    color: inherit;
+    font-size: 0.9rem;
+}
+
+/* Footer */
+footer a {
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+footer a:hover {
+    opacity: 0.7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+}
+
+/* Smooth scrolling offset for fixed navbar */
+html {
+    scroll-padding-top: 70px;
+}
+
+/* Button hover effects */
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

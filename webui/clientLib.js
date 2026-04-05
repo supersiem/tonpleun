@@ -47,6 +47,23 @@ export async function awaitServiceMessage(expectedFor) {
     });
 }
 
+function awaitInitResponse() {
+    return new Promise((resolve) => {
+        const handler = (event) => {
+            try {
+                const rawPacket = JSON.parse(event.data);
+                if (rawPacket.type === requestType.Init) {
+                    ws.removeEventListener('message', handler);
+                    resolve(rawPacket.data);
+                }
+            } catch (e) {
+                // ignore malformed packets
+            }
+        };
+        ws.addEventListener('message', handler);
+    });
+}
+
 function WsSend(ws, data) {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(data));
@@ -129,6 +146,7 @@ export async function getService(ServiceId, ClientId, inputs) {
 
 export async function initializeClient(ClientId) {
     ws = new WebSocket(url);
+    const waitForInit = awaitInitResponse();
 
     ws.addEventListener('open', () => {
         console.log('Verbonden met tonpleun server.');
@@ -177,7 +195,7 @@ export async function initializeClient(ClientId) {
         }
     });
 
-    return await awaitServiceMessage(stringPacketOptions.initSuccess);
+    return await waitForInit;
 }
 
 export function getConfigValue(id) {

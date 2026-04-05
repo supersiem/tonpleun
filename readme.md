@@ -29,6 +29,6 @@ See [run-server.ts](./run-server.ts) and [test-client.ts](./test-client.ts) for 
 
 Some small parts of this codebase were made with AI assistance.
 
-The only major AI-assisted part is the schema validation, which was added retroactively. This README was also improved with Copilot help for readability.
+The major AI-assisted parts are the schema validation and the WebUI (idfk how to make a build script). This README was also improved with Copilot help for readability.
 
 English is not my first language, and I have dyslexia, so this workflow helps me write clearer documentation faster.

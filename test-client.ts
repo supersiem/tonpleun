@@ -25,9 +25,9 @@ async function main() {
     }
 
     console.log('test passed: valid call returns 5 and invalid call is rejected by zod schema.');
-    provider.TESTING_HELPERS.done();
-    provider.ws.close();
-    consumer.ws.close();
+    // provider.TESTING_HELPERS.done();
+    // provider.ws.close();
+    // consumer.ws.close();
 }
 
 main().catch((err) => {

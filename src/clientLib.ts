@@ -51,9 +51,9 @@ export default class Tonpleun {
   public initialized: Promise<StringPacket>;
 
   private VERSION = {
-    MAJOR: 1,
-    MINOR: 1,
-    PATCH: 3
+    MAJOR: 2,
+    MINOR: 0,
+    PATCH: 0
   }
 
   public async awaitServiceMessage(expectedFor: stringPacketOptions): Promise<StringPacket> {

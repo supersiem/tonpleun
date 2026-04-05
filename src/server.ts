@@ -33,9 +33,9 @@ function mapToObject(map: Map<any, any>) {
 }
 
 const VERSION = {
-  MAJOR: 1,
-  MINOR: 1,
-  PATCH: 3
+  MAJOR: 2,
+  MINOR: 0,
+  PATCH: 0
 };
 enum PRIVLEGE_LEVELS {
   NONE = 0,

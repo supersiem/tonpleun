@@ -1,6 +1,6 @@
 {
   "name": "@siemsiem/tonpleun",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "websocket dinges",
   "keywords": [],
   "homepage": "https://github.com/supersiem/Tonpleun#readme",
@@ -24,6 +24,8 @@
     "prebuild": "npm run clean",
     "clean": "rm -rf ./dist",
     "build": "tsc --module commonjs",
+    "build:webui": "node ./scripts/build-webui.mjs",
+    "preview:webui": "python3 -m http.server 4173 --directory webui/dist",
     "preversion": "npm run build",
     "dev": "bun run run-server.ts"
   },
@@ -33,6 +35,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "esbuild": "^0.28.0",
     "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@10.12.1"

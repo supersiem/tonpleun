@@ -1,22 +1,244 @@
+<!doctype html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tonpleun webui</title>
+    <title>Tonpleun Debug WebUI</title>
     <script type="module" src="main.js"></script>
+    <style>
+        :root {
+            --bg: #0f1419;
+            --panel: #1a232c;
+            --panel-2: #22303c;
+            --text: #e6edf3;
+            --muted: #9fb0bf;
+            --accent: #33b3ff;
+            --ok: #3ac782;
+            --warn: #ffcc66;
+            --err: #ff6f91;
+            --border: #2f3f4b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            background: radial-gradient(circle at top right, #1b2733 0%, var(--bg) 45%, #0a0f14 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        .panel {
+            background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0 0 10px;
+            font-weight: 650;
+        }
+
+        h1 {
+            font-size: 20px;
+        }
+
+        h2 {
+            font-size: 14px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .field label {
+            display: block;
+            color: var(--muted);
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        input,
+        textarea,
+        button,
+        select {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: #0f171f;
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 88px;
+            resize: vertical;
+        }
+
+        button {
+            cursor: pointer;
+            transition: transform 120ms ease, border-color 120ms ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            border-color: var(--accent);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .status {
+            margin-bottom: 12px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #0d1c1f;
+            border: 1px solid #20414a;
+            font-size: 13px;
+        }
+
+        .status.ok {
+            border-color: #205238;
+            color: var(--ok);
+        }
+
+        .status.warn {
+            border-color: #5c4e27;
+            color: var(--warn);
+        }
+
+        .status.err {
+            border-color: #5c2433;
+            color: var(--err);
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
+        }
+
+        pre {
+            margin: 0;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #0d1319;
+            overflow: auto;
+            max-height: 360px;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .logs {
+            max-height: 300px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 999px;
+            font-size: 11px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            margin-left: 8px;
+        }
+
+        @media (max-width: 980px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 
-<body id="out">
-    <div id="buttonList">
-    </div>
-    <div id="container"></div>
-    <script>function onchangeOfthing(newValue) {
-            const container = document.getElementById('container');
-            const localdata = window.dataMap.get(newValue);
-            container.innerText = JSON.stringify(localdata);
-        }</script>
+<body>
+    <div class="layout">
+        <aside class="panel">
+            <h1>Tonpleun Debugger <span class="badge">webui</span></h1>
+            <div id="status" class="status warn">Disconnected</div>
 
+            <h2>Connection</h2>
+            <div class="field">
+                <label for="clientId">Client ID</label>
+                <input id="clientId" value="webUI" />
+            </div>
+            <div class="row">
+                <button id="connectBtn">Connect</button>
+                <button id="disconnectBtn">Disconnect</button>
+            </div>
+
+            <h2 style="margin-top:14px;">Polling</h2>
+            <div class="field">
+                <label for="pollMs">Interval (ms)</label>
+                <input id="pollMs" type="number" min="100" value="1000" />
+            </div>
+            <div class="row">
+                <button id="startPollingBtn">Start</button>
+                <button id="stopPollingBtn">Stop</button>
+            </div>
+
+            <h2 style="margin-top:14px;">Quick Actions</h2>
+            <div class="row">
+                <button id="fetchConfigsBtn">Fetch Configs</button>
+                <button id="fetchServicesBtn">Fetch Services</button>
+            </div>
+
+            <h2 style="margin-top:14px;">Manual Service Call</h2>
+            <div class="field">
+                <label for="targetClient">Target Client</label>
+                <input id="targetClient" value="tonpleun" />
+            </div>
+            <div class="field">
+                <label for="serviceId">Service ID</label>
+                <input id="serviceId" value="getConfigs" />
+            </div>
+            <div class="field">
+                <label for="serviceArgs">Args JSON array</label>
+                <textarea id="serviceArgs">[]</textarea>
+            </div>
+            <button id="callServiceBtn">Call Service</button>
+        </aside>
+
+        <main class="stack">
+            <section class="panel">
+                <h3>Configs</h3>
+                <pre id="configsOut">{}</pre>
+            </section>
+            <section class="panel">
+                <h3>Services</h3>
+                <pre id="servicesOut">{}</pre>
+            </section>
+            <section class="panel">
+                <h3>Last Call Result</h3>
+                <pre id="callOut">{}</pre>
+            </section>
+            <section class="panel">
+                <h3>Logs</h3>
+                <pre id="logsOut" class="logs"></pre>
+            </section>
+        </main>
+    </div>
 </body>
 
 </html>
